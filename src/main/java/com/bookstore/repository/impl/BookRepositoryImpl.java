@@ -2,16 +2,47 @@ package com.bookstore.repository.impl;
 
 import com.bookstore.model.Book;
 import com.bookstore.repository.BookRepository;
+import lombok.RequiredArgsConstructor;
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
+import org.hibernate.Transaction;
+import org.springframework.stereotype.Repository;
 import java.util.List;
 
+@Repository
+@RequiredArgsConstructor
 public class BookRepositoryImpl implements BookRepository {
+    private final SessionFactory sessionFactory;
+    
     @Override
     public Book save(Book book) {
-        return null;
+        Session session = null;
+        Transaction transaction = null;
+        
+        try {
+            session = sessionFactory.openSession();
+            transaction = session.beginTransaction();
+            session.persist(book);
+            transaction.commit();
+            return book;
+        } catch (Exception e) {
+            if (transaction != null) {
+                transaction.rollback();
+            }
+            throw new RuntimeException("Cannot save book: " + book, e);
+        } finally {
+            if (session != null) {
+                session.close();
+            }
+        }
     }
     
     @Override
-    public List findAll() {
-        return List.of();
+    public List<Book> findAll() {
+        try (Session session = sessionFactory.openSession()) {
+            return session.createQuery("SELECT b FROM Book b", Book.class).getResultList();
+        } catch (Exception e) {
+            throw new RuntimeException("Cannot find all books", e);
+        }
     }
 }
