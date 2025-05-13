@@ -1,10 +1,8 @@
 package com.bookstore.repository.impl;
 
 import com.bookstore.exception.DataProcessingException;
-import com.bookstore.exception.EntityNotFoundException;
 import com.bookstore.model.Book;
 import com.bookstore.repository.BookRepository;
-import jakarta.persistence.EntityManager;
 import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
@@ -43,9 +41,11 @@ public class BookRepositoryImpl implements BookRepository {
     
     @Override
     public Optional<Book> findById(Long id) {
-        try (EntityManager entityManager = sessionFactory.createEntityManager()) {
-            Book book = entityManager.find(Book.class, id);
+        try (Session session = sessionFactory.openSession()) {
+            Book book = session.find(Book.class, id);
             return Optional.ofNullable(book);
+        } catch (Exception e) {
+            throw new DataProcessingException("Cannot find book: " + id, e);
         }
     }
     
@@ -54,7 +54,7 @@ public class BookRepositoryImpl implements BookRepository {
         try (Session session = sessionFactory.openSession()) {
             return session.createQuery("SELECT b FROM Book b", Book.class).getResultList();
         } catch (Exception e) {
-            throw new EntityNotFoundException("Cannot find all books", e);
+            throw new DataProcessingException("Cannot find all books", e);
         }
     }
 }
