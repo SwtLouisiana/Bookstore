@@ -1,8 +1,10 @@
 package com.bookstore.repository.impl;
 
+import com.bookstore.exception.DataProcessingException;
 import com.bookstore.model.Book;
 import com.bookstore.repository.BookRepository;
 import java.util.List;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
@@ -29,7 +31,7 @@ public class BookRepositoryImpl implements BookRepository {
             if (transaction != null) {
                 transaction.rollback();
             }
-            throw new RuntimeException("Cannot save book: " + book, e);
+            throw new DataProcessingException("Cannot save book: " + book, e);
         } finally {
             if (session != null) {
                 session.close();
@@ -38,11 +40,21 @@ public class BookRepositoryImpl implements BookRepository {
     }
     
     @Override
+    public Optional<Book> findById(Long id) {
+        try (Session session = sessionFactory.openSession()) {
+            Book book = session.find(Book.class, id);
+            return Optional.ofNullable(book);
+        } catch (Exception e) {
+            throw new DataProcessingException("Cannot find book: " + id, e);
+        }
+    }
+    
+    @Override
     public List<Book> findAll() {
         try (Session session = sessionFactory.openSession()) {
             return session.createQuery("SELECT b FROM Book b", Book.class).getResultList();
         } catch (Exception e) {
-            throw new RuntimeException("Cannot find all books", e);
+            throw new DataProcessingException("Cannot find all books", e);
         }
     }
 }
