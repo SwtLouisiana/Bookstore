@@ -3,9 +3,12 @@ package com.bookstore.controller;
 import com.bookstore.dto.BookDto;
 import com.bookstore.dto.CreateBookRequestDto;
 import com.bookstore.service.BookService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -17,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+@Tag(name = "Book management", description = "Endpoint fot managing books")
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/books")
@@ -25,8 +29,9 @@ public class BookController {
     private final BookService bookService;
     
     @GetMapping
-    public List<BookDto> findAll() {
-        return bookService.findAll();
+    @Operation(summary = "Get all books", description = "Get a list of all available books")
+    public Page<BookDto> findAll(Pageable pageable) {
+        return bookService.findAll(pageable);
     }
     
     @GetMapping("/{id}")
@@ -35,6 +40,7 @@ public class BookController {
     }
     
     @PostMapping
+    @Operation(summary = "Create a new book", description = "Create a new book")
     public BookDto save(@RequestBody @Valid CreateBookRequestDto requestDto) {
         return bookService.save(requestDto);
     }
