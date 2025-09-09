@@ -31,3 +31,7 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### MySQL-Connector-j ###
+mysql-connector-j-*
+
