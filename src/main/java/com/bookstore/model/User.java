@@ -10,6 +10,7 @@ import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.Table;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Set;
 import lombok.Getter;
 import lombok.Setter;
@@ -52,7 +53,7 @@ public class User implements UserDetails {
             joinColumns = @JoinColumn(name = "user_id"),
             inverseJoinColumns = @JoinColumn(name = "role_id")
     )
-    private Set<Role> roles;
+    private Set<Role> roles = new HashSet<>();
     
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
