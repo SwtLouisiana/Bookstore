@@ -1,0 +1,17 @@
+package com.bookstore.service;
+
+import com.bookstore.dto.category.CategoryRequestDto;
+import com.bookstore.dto.category.CategoryResponseDto;
+import org.springframework.data.domain.Page;
+
+public interface CategoryService {
+    Page<CategoryResponseDto> findAll();
+    
+    CategoryResponseDto getById(Long id);
+    
+    CategoryResponseDto save(CategoryRequestDto categoryDto);
+    
+    CategoryResponseDto update(Long id, CategoryRequestDto categoryDto);
+    
+    void deleteById(Long id);
+}
