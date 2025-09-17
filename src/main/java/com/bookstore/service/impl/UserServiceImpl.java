@@ -1,7 +1,7 @@
 package com.bookstore.service.impl;
 
-import com.bookstore.dto.UserRegistrationRequestDto;
-import com.bookstore.dto.UserResponseDto;
+import com.bookstore.dto.user.UserRegistrationRequestDto;
+import com.bookstore.dto.user.UserResponseDto;
 import com.bookstore.exception.RegistrationException;
 import com.bookstore.mapper.UserMapper;
 import com.bookstore.model.User;

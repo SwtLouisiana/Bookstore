@@ -1,8 +1,11 @@
 package com.bookstore.controller;
 
-import com.bookstore.dto.UserRegistrationRequestDto;
-import com.bookstore.dto.UserResponseDto;
+import com.bookstore.dto.user.UserLoginRequestDto;
+import com.bookstore.dto.user.UserLoginResponseDto;
+import com.bookstore.dto.user.UserRegistrationRequestDto;
+import com.bookstore.dto.user.UserResponseDto;
 import com.bookstore.exception.RegistrationException;
+import com.bookstore.security.AuthenticationService;
 import com.bookstore.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -19,11 +22,17 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class AuthController {
     private final UserService userService;
+    private final AuthenticationService authenticationService;
     
     @PostMapping("/registration")
     @Operation(summary = "Register a new user", description = "Register a new user")
     public UserResponseDto registerUser(@Valid @RequestBody UserRegistrationRequestDto requestDto)
             throws RegistrationException {
         return userService.registerUser(requestDto);
+    }
+    
+    @PostMapping("/login")
+    public UserLoginResponseDto login(@RequestBody UserLoginRequestDto requestDto) {
+        return authenticationService.authenticate(requestDto);
     }
 }

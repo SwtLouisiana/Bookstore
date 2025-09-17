@@ -19,4 +19,3 @@ public class CustomUserDetailsService implements UserDetailsService {
                         new UsernameNotFoundException("Can't find user by email: " + email));
     }
 }
-
