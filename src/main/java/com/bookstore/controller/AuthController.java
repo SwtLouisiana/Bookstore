@@ -32,10 +32,8 @@ public class AuthController {
     }
     
     @PostMapping("/login")
-    @Operation(
-            summary = "User login",
-            description = "Authenticate user by email and password. Returns JWT access token."
-    )
+    @Operation(summary = "User login",
+            description = "Authenticate user by email and password. Returns JWT access token.")
     public UserLoginResponseDto login(@RequestBody @Valid UserLoginRequestDto requestDto) {
         return authenticationService.authenticate(requestDto);
     }
