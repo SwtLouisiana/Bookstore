@@ -44,7 +44,9 @@ public class CategoryController {
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping
-    public CategoryResponseDto createCategory(CategoryRequestDto categoryRequestDto) {
+    public CategoryResponseDto createCategory(
+            @RequestBody @Valid CategoryRequestDto categoryRequestDto
+    ) {
         return categoryService.save(categoryRequestDto);
     }
     
@@ -91,7 +93,7 @@ public class CategoryController {
     @ResponseStatus(HttpStatus.OK)
     @PutMapping("/{id}")
     public CategoryResponseDto updateCategory(@PathVariable Long id, @RequestBody
-            @Valid CategoryRequestDto categoryRequestDto) {
+    @Valid CategoryRequestDto categoryRequestDto) {
         return categoryService.update(id, categoryRequestDto);
     }
     
