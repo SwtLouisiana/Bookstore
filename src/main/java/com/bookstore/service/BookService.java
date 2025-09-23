@@ -1,6 +1,7 @@
 package com.bookstore.service;
 
 import com.bookstore.dto.book.BookDto;
+import com.bookstore.dto.book.BookDtoWithoutCategoriesIds;
 import com.bookstore.dto.book.CreateBookRequestDto;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -15,4 +16,6 @@ public interface BookService {
     void deleteById(Long id);
     
     BookDto updateBook(CreateBookRequestDto requestDto, Long id);
+    
+    Page<BookDtoWithoutCategoriesIds> findAllByCategoryId(Long categoryId, Pageable pageable);
 }
