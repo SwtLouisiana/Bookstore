@@ -13,6 +13,7 @@ import java.util.stream.Collectors;
 import org.mapstruct.AfterMapping;
 import org.mapstruct.Mapper;
 import org.mapstruct.MappingTarget;
+import org.mapstruct.Named;
 
 @Mapper(config = MapperConfig.class)
 public interface BookMapper {
@@ -42,5 +43,12 @@ public interface BookMapper {
                 .map(Category::new)
                 .collect(Collectors.toSet());
         book.setCategories(categories);
+    }
+    
+    @Named("bookFromId")
+    default Book bookFromId(Long bookId) {
+        Book book = new Book();
+        book.setId(bookId);
+        return book;
     }
 }
