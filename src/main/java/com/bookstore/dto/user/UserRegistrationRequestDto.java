@@ -4,7 +4,6 @@ import com.bookstore.validation.FieldMatch;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
-import java.util.Set;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -32,5 +31,4 @@ public class UserRegistrationRequestDto {
     
     private String shippingAddress;
     
-    private Set<String> roles;
 }

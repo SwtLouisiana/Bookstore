@@ -71,7 +71,7 @@ public class ShoppingCartController {
             @ApiResponse(responseCode = "400", description = "Invalid input data")
     })
     @PutMapping("/items/{cartItemId}")
-    public CartItemResponseDto updateCartItem(
+    public ShoppingCartResponseDto updateCartItem(
             @PathVariable Long cartItemId,
             @RequestBody @Valid CartItemUpdateRequest cartItemUpdateRequest,
             @AuthenticationPrincipal User user) {

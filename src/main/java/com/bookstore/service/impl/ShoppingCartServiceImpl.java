@@ -1,7 +1,6 @@
 package com.bookstore.service.impl;
 
 import com.bookstore.dto.cartitem.CartItemRequestDto;
-import com.bookstore.dto.cartitem.CartItemResponseDto;
 import com.bookstore.dto.cartitem.CartItemUpdateRequest;
 import com.bookstore.dto.shoppingcart.ShoppingCartResponseDto;
 import com.bookstore.mapper.CartItemMapper;
@@ -20,6 +19,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 @Service
+@Transactional
 @RequiredArgsConstructor
 public class ShoppingCartServiceImpl implements ShoppingCartService {
     private final ShoppingCartRepository shoppingCartRepository;
@@ -35,7 +35,6 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
         return shoppingCartMapper.toResponseDto(cart);
     }
     
-    @Transactional
     @Override
     public ShoppingCartResponseDto addCartItem(Long userId, CartItemRequestDto cartItem) {
         ShoppingCart cart = shoppingCartRepository
@@ -59,7 +58,7 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
     }
     
     @Override
-    public CartItemResponseDto updateCartItem(Long userId, Long cartItemId,
+    public ShoppingCartResponseDto updateCartItem(Long userId, Long cartItemId,
                                               CartItemUpdateRequest cartItemUpdateRequest) {
         ShoppingCart cart = shoppingCartRepository
                 .findByUserId(userId).orElseThrow(() ->
@@ -67,7 +66,7 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
         return cartItemRepository.findByIdAndShoppingCartId(cartItemId, cart.getId())
                 .map(item -> {
                     item.setQuantity(cartItemUpdateRequest.getQuantity());
-                    return cartItemMapper.toResponseDto(cartItemRepository.save(item));
+                    return shoppingCartMapper.toResponseDto(cart);
                 })
                 .orElseThrow(() -> new EntityNotFoundException(
                         "CartItem not found for id " + cartItemId));
@@ -80,7 +79,6 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
         shoppingCartRepository.save(shoppingCart);
     }
     
-    @Transactional
     @Override
     public ShoppingCartResponseDto removeCartItem(Long userId, Long cartItemId) {
         ShoppingCart cart = shoppingCartRepository
