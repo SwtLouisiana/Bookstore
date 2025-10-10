@@ -27,7 +27,7 @@ public class ShoppingCart {
     private Long id;
     
     @OneToOne(optional = false, fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", unique = true, nullable = false)
+    @JoinColumn(name = "id")
     @MapsId
     private User user;
     

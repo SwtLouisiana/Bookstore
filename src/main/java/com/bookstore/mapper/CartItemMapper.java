@@ -15,6 +15,9 @@ public interface CartItemMapper {
     
     CartItemResponseDto toResponseDto(CartItem cartItem);
     
+    @Mapping(target = "book", source = "bookId", qualifiedByName = "bookFromId")
+    CartItem toCartItem(CartItemRequestDto cartItemRequestDto);
+    
     @AfterMapping
     default void setBookId(@MappingTarget CartItemRequestDto cartItemRequestDto,
                            CartItem cartItem) {
@@ -27,7 +30,4 @@ public interface CartItemMapper {
         cartItemResponseDto.setBookId(cartItem.getBook().getId());
         cartItemResponseDto.setBookTitle(cartItem.getBook().getTitle());
     }
-    
-    @Mapping(target = "book", source = "bookId", qualifiedByName = "bookFromId")
-    CartItem toCartItem(CartItemRequestDto cartItemRequestDto);
 }

@@ -44,22 +44,28 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
                 .findById(cartItem.getBookId()).orElseThrow(() ->
                         new EntityNotFoundException(
                                 "Book not found for id " + cartItem.getBookId()));
-        cartItemRepository
-                .findByShoppingCartIdAndBookId(cart.getId(), book.getId())
-                .ifPresentOrElse(existingItem -> {
-                    existingItem.setQuantity(existingItem.getQuantity() + cartItem.getQuantity());
-                    cartItemRepository.save(existingItem); },
+        
+        cart.getCartItems().stream()
+                .filter(item -> item.getBook().getId().equals(book.getId()))
+                .findFirst()
+                .ifPresentOrElse(
+                        existingItem -> existingItem.setQuantity(existingItem.getQuantity()
+                                + cartItem.getQuantity()),
                         () -> {
                             CartItem newItem = cartItemMapper.toCartItem(cartItem);
+                            newItem.setBook(book);
                             newItem.setShoppingCart(cart);
-                            cartItemRepository.save(newItem);
+                            cart.getCartItems().add(newItem);
                         });
+        
+        shoppingCartRepository.save(cart);
+        
         return shoppingCartMapper.toResponseDto(cart);
     }
     
     @Override
     public ShoppingCartResponseDto updateCartItem(Long userId, Long cartItemId,
-                                              CartItemUpdateRequest cartItemUpdateRequest) {
+                                                  CartItemUpdateRequest cartItemUpdateRequest) {
         ShoppingCart cart = shoppingCartRepository
                 .findByUserId(userId).orElseThrow(() ->
                         new EntityNotFoundException("ShoppingCart not found for user " + userId));

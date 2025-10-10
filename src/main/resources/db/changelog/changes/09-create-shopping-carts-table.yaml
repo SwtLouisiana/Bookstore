@@ -9,14 +9,6 @@ databaseChangeLog:
               - column:
                   name: id
                   type: BIGINT
-                  autoIncrement: true
-                  constraints:
-                    primaryKey: true
-                    nullable: false
-
-              - column:
-                  name: user_id
-                  type: BIGINT
                   constraints:
                     primaryKey: true
                     nullable: false
@@ -30,7 +22,7 @@ databaseChangeLog:
 
         - addForeignKeyConstraint:
             baseTableName: shopping_carts
-            baseColumnNames: user_id
+            baseColumnNames: id
             referencedTableName: users
             referencedColumnNames: id
             constraintName: fk_shopping_carts_user
