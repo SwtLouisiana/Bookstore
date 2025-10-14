@@ -10,12 +10,15 @@ import com.bookstore.repository.RoleRepository;
 import com.bookstore.repository.UserRepository;
 import com.bookstore.service.ShoppingCartService;
 import com.bookstore.service.UserService;
+import jakarta.persistence.EntityNotFoundException;
+import jakarta.transaction.Transactional;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
+@Transactional
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
@@ -35,13 +38,12 @@ public class UserServiceImpl implements UserService {
         
         user.setRoles(Set.of(
                 roleRepository.findByName(RoleName.ROLE_USER)
-                        .orElseThrow(() -> new RegistrationException(
+                        .orElseThrow(() -> new EntityNotFoundException(
                                 "Role does not exist: " + RoleName.ROLE_USER))));
         
         userRepository.save(user);
         
         shoppingCartService.initializeShoppingCart(user);
-        
         return userMapper.toUserResponseDto(user);
     }
 }
