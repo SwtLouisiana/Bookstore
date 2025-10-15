@@ -5,17 +5,27 @@ import com.bookstore.dto.user.UserResponseDto;
 import com.bookstore.exception.RegistrationException;
 import com.bookstore.mapper.UserMapper;
 import com.bookstore.model.User;
+import com.bookstore.model.enums.RoleName;
+import com.bookstore.repository.RoleRepository;
 import com.bookstore.repository.UserRepository;
+import com.bookstore.service.ShoppingCartService;
 import com.bookstore.service.UserService;
+import jakarta.persistence.EntityNotFoundException;
+import jakarta.transaction.Transactional;
+import java.util.Set;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
+@Transactional
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
-    
+    private final ShoppingCartService shoppingCartService;
     private final UserMapper userMapper;
+    private final PasswordEncoder passwordEncoder;
+    private final RoleRepository roleRepository;
     
     @Override
     public UserResponseDto registerUser(UserRegistrationRequestDto requestDto)
@@ -24,6 +34,16 @@ public class UserServiceImpl implements UserService {
             throw new RegistrationException("Email already exist: " + requestDto.getEmail());
         }
         User user = userMapper.toModel(requestDto);
-        return userMapper.toUserResponseDto(userRepository.save(user));
+        user.setPassword(passwordEncoder.encode(requestDto.getPassword()));
+        
+        user.setRoles(Set.of(
+                roleRepository.findByName(RoleName.ROLE_USER)
+                        .orElseThrow(() -> new EntityNotFoundException(
+                                "Role does not exist: " + RoleName.ROLE_USER))));
+        
+        userRepository.save(user);
+        
+        shoppingCartService.initializeShoppingCart(user);
+        return userMapper.toUserResponseDto(user);
     }
 }
