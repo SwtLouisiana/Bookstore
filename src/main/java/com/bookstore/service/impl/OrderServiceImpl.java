@@ -12,7 +12,6 @@ import com.bookstore.model.Order;
 import com.bookstore.model.OrderItem;
 import com.bookstore.model.ShoppingCart;
 import com.bookstore.model.User;
-import com.bookstore.repository.CartItemRepository;
 import com.bookstore.repository.OrderItemRepository;
 import com.bookstore.repository.OrderRepository;
 import com.bookstore.repository.ShoppingCartRepository;

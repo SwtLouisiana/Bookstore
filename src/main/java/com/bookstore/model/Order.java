@@ -32,27 +32,27 @@ import org.hibernate.annotations.SQLRestriction;
 public class Order {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    Long id;
+    private Long id;
     
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(nullable = false)
-    User user;
+    private User user;
     
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    Status status;
+    private Status status;
     
     @Column(nullable = false)
-    BigDecimal total;
+    private BigDecimal total;
     
     @Column(nullable = false)
-    LocalDateTime orderDate;
+    private LocalDateTime orderDate;
     
     @Column(nullable = false)
-    String shippingAddress;
+    private String shippingAddress;
     
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
-    Set<OrderItem> orderItems = new HashSet<>();
+    private Set<OrderItem> orderItems = new HashSet<>();
     
     @Column(nullable = false)
     private boolean isDeleted = false;

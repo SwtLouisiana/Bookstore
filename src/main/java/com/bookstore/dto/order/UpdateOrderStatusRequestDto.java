@@ -9,5 +9,5 @@ import lombok.Setter;
 @Setter
 public class UpdateOrderStatusRequestDto {
     @NotNull
-    Status status;
+    private Status status;
 }
