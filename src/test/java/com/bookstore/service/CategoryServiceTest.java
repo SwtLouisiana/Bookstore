@@ -18,6 +18,7 @@ import com.bookstore.mapper.CategoryMapper;
 import com.bookstore.model.Category;
 import com.bookstore.repository.CategoryRepository;
 import com.bookstore.service.impl.CategoryServiceImpl;
+import com.bookstore.util.TestUtil;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
@@ -49,44 +50,36 @@ class CategoryServiceTest {
             """)
     void findAll_ValidPageRequest_ReturnsPagedCategoryList() {
         
-        Category dramaCategory = new Category();
-        dramaCategory.setId(1L);
-        dramaCategory.setName("Drama");
-        dramaCategory.setDescription("Dramatic");
+        Category fantasyCategory = TestUtil.getFantasyCategory();
+        Category scienceFictionCategory = TestUtil.getScienceFictionCategory();
         
-        Category fantasyCategory = new Category();
-        fantasyCategory.setId(2L);
-        fantasyCategory.setName("Fantasy");
-        fantasyCategory.setDescription("Fantasy");
-        
-        CategoryResponseDto dramaCategoryResponseDto = new CategoryResponseDto();
-        dramaCategoryResponseDto.setId(1L);
-        dramaCategoryResponseDto.setName("Drama");
-        dramaCategoryResponseDto.setDescription("Dramatic");
-        
-        CategoryResponseDto fantasyCategoryResponseDto = new CategoryResponseDto();
-        fantasyCategoryResponseDto.setId(2L);
-        fantasyCategoryResponseDto.setName("Fantasy");
-        fantasyCategoryResponseDto.setDescription("Fantasy");
+        CategoryResponseDto fantasyDto = TestUtil.getFantasyCategoryResponseDto();
+        CategoryResponseDto scienceFictionDto = TestUtil.getScienceFictionCategoryResponseDto();
         
         Pageable pageable = PageRequest.of(0, 10);
-        Page<Category> categoryPage = new PageImpl<>(List.of(dramaCategory, fantasyCategory),
-                pageable, 2);
+        Page<Category> categoryPage = new PageImpl<>(
+                List.of(fantasyCategory, scienceFictionCategory),
+                pageable,
+                2
+        );
         
         when(categoryRepository.findAll(pageable)).thenReturn(categoryPage);
-        when(categoryMapper.toResponseDto(dramaCategory)).thenReturn(dramaCategoryResponseDto);
-        when(categoryMapper.toResponseDto(fantasyCategory)).thenReturn(fantasyCategoryResponseDto);
+        when(categoryMapper.toResponseDto(fantasyCategory)).thenReturn(fantasyDto);
+        when(categoryMapper.toResponseDto(scienceFictionCategory)).thenReturn(scienceFictionDto);
         
         Page<CategoryResponseDto> resultPage = categoryService.findAll(pageable);
         
         Page<CategoryResponseDto> expectedPage = new PageImpl<>(
-                List.of(dramaCategoryResponseDto, fantasyCategoryResponseDto), pageable, 2);
+                List.of(fantasyDto, scienceFictionDto),
+                pageable,
+                2
+        );
         
         assertEquals(expectedPage, resultPage);
         
         verify(categoryRepository).findAll(pageable);
-        verify(categoryMapper).toResponseDto(dramaCategory);
         verify(categoryMapper).toResponseDto(fantasyCategory);
+        verify(categoryMapper).toResponseDto(scienceFictionCategory);
         
     }
     
@@ -95,25 +88,19 @@ class CategoryServiceTest {
             getById() returns the correct CategoryResponseDto for an existing ID
             """)
     void getById_ExistingId_ReturnsCategory() {
-        Category dramaCategory = new Category();
-        dramaCategory.setId(1L);
-        dramaCategory.setName("Drama");
-        dramaCategory.setDescription("Dramatic");
         
-        CategoryResponseDto dramaCategoryResponseDto = new CategoryResponseDto();
-        dramaCategoryResponseDto.setId(1L);
-        dramaCategoryResponseDto.setName("Drama");
-        dramaCategoryResponseDto.setDescription("Dramatic");
+        Category fantasyCategory = TestUtil.getFantasyCategory();
+        CategoryResponseDto fantasyDto = TestUtil.getFantasyCategoryResponseDto();
         
-        when(categoryRepository.findById(anyLong())).thenReturn(Optional.of(dramaCategory));
-        when(categoryMapper.toResponseDto(dramaCategory)).thenReturn(dramaCategoryResponseDto);
+        when(categoryRepository.findById(1L)).thenReturn(Optional.of(fantasyCategory));
+        when(categoryMapper.toResponseDto(fantasyCategory)).thenReturn(fantasyDto);
         
-        CategoryResponseDto categoryResponseDto = categoryService.getById(1L);
+        CategoryResponseDto result = categoryService.getById(1L);
         
-        assertEquals(dramaCategoryResponseDto, categoryResponseDto);
+        assertEquals(fantasyDto, result);
         
-        verify(categoryRepository).findById(anyLong());
-        verify(categoryMapper).toResponseDto(dramaCategory);
+        verify(categoryRepository).findById(1L);
+        verify(categoryMapper).toResponseDto(fantasyCategory);
         
     }
     
@@ -135,30 +122,22 @@ class CategoryServiceTest {
             save() persists a valid category and returns the saved CategoryResponseDto
             """)
     void save_ValidCategoryRequest_SavesAndReturnsCategory() {
-        CategoryRequestDto categoryRequestDto = new CategoryRequestDto();
-        categoryRequestDto.setName("Drama");
-        categoryRequestDto.setDescription("Dramatic");
         
-        Category dramaCategory = new Category();
-        dramaCategory.setId(1L);
-        dramaCategory.setName("Drama");
-        dramaCategory.setDescription("Dramatic");
+        CategoryRequestDto requestDto = TestUtil.getFantasyCategoryRequestDto();
+        Category fantasyCategory = TestUtil.getFantasyCategory();
+        CategoryResponseDto fantasyDto = TestUtil.getFantasyCategoryResponseDto();
         
-        CategoryResponseDto categoryResponseDto = new CategoryResponseDto();
-        categoryResponseDto.setId(1L);
-        categoryResponseDto.setName("Drama");
-        categoryResponseDto.setDescription("Dramatic");
+        when(categoryMapper.toEntity(requestDto)).thenReturn(fantasyCategory);
+        when(categoryRepository.save(fantasyCategory)).thenReturn(fantasyCategory);
+        when(categoryMapper.toResponseDto(fantasyCategory)).thenReturn(fantasyDto);
         
-        when(categoryMapper.toEntity(categoryRequestDto)).thenReturn(dramaCategory);
-        when(categoryRepository.save(dramaCategory)).thenReturn(dramaCategory);
-        when(categoryMapper.toResponseDto(dramaCategory)).thenReturn(categoryResponseDto);
+        CategoryResponseDto result = categoryService.save(requestDto);
         
-        CategoryResponseDto responseDto = categoryService.save(categoryRequestDto);
+        assertEquals(fantasyDto, result);
         
-        assertEquals(categoryResponseDto, responseDto);
-        
-        verify(categoryRepository).save(dramaCategory);
-        verify(categoryMapper).toResponseDto(any(Category.class));
+        verify(categoryMapper).toEntity(requestDto);
+        verify(categoryRepository).save(fantasyCategory);
+        verify(categoryMapper).toResponseDto(fantasyCategory);
         
     }
     
@@ -167,35 +146,28 @@ class CategoryServiceTest {
             update() updates existing category and returns updated DTO
             """)
     void update_ExistingId_UpdatesAndReturnsCategory() {
-        CategoryRequestDto categoryRequestDto = new CategoryRequestDto();
-        categoryRequestDto.setName("Drama");
-        categoryRequestDto.setDescription("Dramatic");
         
-        Category dramaCategory = new Category();
-        dramaCategory.setId(1L);
-        dramaCategory.setName("Old name");
-        dramaCategory.setDescription("Old description");
+        Long categoryId = 1L;
+        CategoryRequestDto requestDto = TestUtil.getUpdatedFantasyCategoryRequestDto();
         
-        CategoryResponseDto categoryResponseDto = new CategoryResponseDto();
-        categoryResponseDto.setId(1L);
-        categoryResponseDto.setName("Drama");
-        categoryResponseDto.setDescription("Dramatic");
+        Category oldCategory = TestUtil.getFantasyCategory();
         
-        when(categoryRepository.findById(anyLong())).thenReturn(Optional.of(dramaCategory));
-        doNothing().when(categoryMapper).updateCategoryFromDto(categoryRequestDto, dramaCategory);
-        when(categoryRepository.save(dramaCategory)).thenReturn(dramaCategory);
-        when(categoryMapper.toResponseDto(dramaCategory)).thenReturn(categoryResponseDto);
+        CategoryResponseDto updatedDto = TestUtil.convertToCategoryResponseDto(requestDto);
+        updatedDto.setId(categoryId);
         
-        CategoryResponseDto responseDto = categoryService.update(dramaCategory.getId(),
-                categoryRequestDto);
+        when(categoryRepository.findById(categoryId)).thenReturn(Optional.of(oldCategory));
+        doNothing().when(categoryMapper).updateCategoryFromDto(requestDto, oldCategory);
+        when(categoryRepository.save(oldCategory)).thenReturn(oldCategory);
+        when(categoryMapper.toResponseDto(oldCategory)).thenReturn(updatedDto);
         
-        assertEquals(categoryResponseDto, responseDto);
+        CategoryResponseDto result = categoryService.update(categoryId, requestDto);
         
-        verify(categoryRepository).findById(anyLong());
-        verify(categoryMapper).updateCategoryFromDto(categoryRequestDto, dramaCategory);
-        verify(categoryRepository).save(dramaCategory);
-        verify(categoryMapper).toResponseDto(any(Category.class));
+        assertEquals(updatedDto, result);
         
+        verify(categoryRepository).findById(categoryId);
+        verify(categoryMapper).updateCategoryFromDto(requestDto, oldCategory);
+        verify(categoryRepository).save(oldCategory);
+        verify(categoryMapper).toResponseDto(oldCategory);
     }
     
     @Test
@@ -203,15 +175,18 @@ class CategoryServiceTest {
             update() throws EntityNotFoundException when category with given ID does not exist
             """)
     void update_NonExistingId_ThrowsEntityNotFoundException() {
-        when(categoryRepository.findById(anyLong())).thenReturn(Optional.empty());
         
-        assertThrows(EntityNotFoundException.class, () -> categoryService.update(1L,
-                new CategoryRequestDto()));
+        CategoryRequestDto requestDto = TestUtil.getFantasyCategoryRequestDto();
+        Long nonExistingId = 1L;
         
-        verify(categoryRepository).findById(anyLong());
+        when(categoryRepository.findById(nonExistingId)).thenReturn(Optional.empty());
+        
+        assertThrows(EntityNotFoundException.class,
+                () -> categoryService.update(nonExistingId, requestDto));
+        
+        verify(categoryRepository).findById(nonExistingId);
         verifyNoInteractions(categoryMapper);
         verify(categoryRepository, never()).save(any());
-        
     }
     
     @Test
@@ -219,14 +194,12 @@ class CategoryServiceTest {
             deleteById() deletes category when category with given ID exists
             """)
     void deleteById_ExistingId_DeletesCategory() {
-        Category dramaCategory = new Category();
-        dramaCategory.setId(1L);
-        dramaCategory.setName("Drama");
-        dramaCategory.setDescription("Dramatic");
         
-        categoryService.deleteById(1L);
+        Long categoryId = 1L;
         
-        verify(categoryRepository).deleteById(1L);
+        categoryService.deleteById(categoryId);
+        
+        verify(categoryRepository).deleteById(categoryId);
         verify(categoryRepository, never()).save(any());
         
     }

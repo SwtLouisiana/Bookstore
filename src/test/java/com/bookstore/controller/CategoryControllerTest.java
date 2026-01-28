@@ -1,5 +1,6 @@
 package com.bookstore.controller;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -11,9 +12,14 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.bookstore.dto.book.BookDtoWithoutCategoriesIds;
 import com.bookstore.dto.category.CategoryRequestDto;
+import com.bookstore.dto.category.CategoryResponseDto;
+import com.bookstore.util.TestUtil;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.List;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -60,9 +66,8 @@ class CategoryControllerTest {
             """)
     @WithMockUser(username = "admin", roles = "ADMIN")
     void createCategory_ValidRequest_AsAdmin_ReturnsCreatedCategory_201() throws Exception {
-        CategoryRequestDto requestDto = new CategoryRequestDto();
-        requestDto.setName("Cyberpunk");
-        requestDto.setDescription("Cyberpunk books");
+        CategoryRequestDto requestDto = TestUtil.getCyberpunkCategoryRequestDto();
+        CategoryResponseDto expectedResponseDto = TestUtil.convertToCategoryResponseDto(requestDto);
         
         String jsonRequest = objectMapper.writeValueAsString(requestDto);
         
@@ -73,12 +78,16 @@ class CategoryControllerTest {
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andReturn();
         
-        String jsonResponse = result.getResponse().getContentAsString();
-        JsonNode category = objectMapper.readTree(jsonResponse);
+        CategoryResponseDto actualResponseDto = objectMapper.readValue(
+                result.getResponse().getContentAsString(),
+                CategoryResponseDto.class
+        );
         
-        assertNotNull(category.get("id"));
-        assertEquals("Cyberpunk", category.get("name").asText());
-        assertEquals("Cyberpunk books", category.get("description").asText());
+        assertNotNull(actualResponseDto.getId());
+        assertThat(actualResponseDto)
+                .usingRecursiveComparison()
+                .ignoringFields("id")
+                .isEqualTo(expectedResponseDto);
     }
     
     @Test
@@ -87,6 +96,8 @@ class CategoryControllerTest {
             """)
     @WithMockUser(username = "user")
     void getAll_ExistingCategories_ReturnsPagedCategories_200() throws Exception {
+        List<CategoryResponseDto> expectedCategories = TestUtil.getAllCategoriesResponseDto();
+        
         MvcResult result = mockMvc.perform(get("/categories")
                         .param("page", "0")
                         .param("size", "10")
@@ -96,20 +107,19 @@ class CategoryControllerTest {
                 .andReturn();
         
         String json = result.getResponse().getContentAsString();
-        
         JsonNode root = objectMapper.readTree(json);
-        JsonNode categories = root.get("content");
+        JsonNode categoriesJson = root.get("content");
         
-        assertNotNull(categories);
-        assertTrue(categories.isArray());
-        assertEquals(3, categories.size());
+        List<CategoryResponseDto> actualCategories = objectMapper.convertValue(
+                categoriesJson,
+                new TypeReference<>() {}
+        );
         
-        JsonNode categoryFantasy = categories.get(0);
+        assertEquals(3, actualCategories.size());
         
-        assertNotNull(categoryFantasy.get("id"));
-        assertNotNull(categoryFantasy.get("name"));
-        assertEquals("Fantasy", categoryFantasy.get("name").asText());
-        assertEquals("Books about magical worlds", categoryFantasy.get("description").asText());
+        assertThat(actualCategories)
+                .usingRecursiveComparison()
+                .isEqualTo(expectedCategories);
     }
     
     @Test
@@ -119,6 +129,7 @@ class CategoryControllerTest {
     @WithMockUser(username = "user")
     void getCategoryById_ExistingCategory_ReturnsCategory_200() throws Exception {
         Long categoryId = 1L;
+        CategoryResponseDto expectedCategory = TestUtil.getFantasyCategoryResponseDto();
         
         MvcResult result = mockMvc.perform(get("/categories/{id}", categoryId)
                         .contentType(MediaType.APPLICATION_JSON))
@@ -126,12 +137,12 @@ class CategoryControllerTest {
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andReturn();
         
-        String json = result.getResponse().getContentAsString();
-        JsonNode category = objectMapper.readTree(json);
+        CategoryResponseDto actualCategory = objectMapper.readValue(
+                result.getResponse().getContentAsString(),
+                CategoryResponseDto.class
+        );
         
-        assertEquals(1L, category.get("id").asLong());
-        assertEquals("Fantasy", category.get("name").asText());
-        assertEquals("Books about magical worlds", category.get("description").asText());
+        assertEquals(expectedCategory, actualCategory);
     }
     
     @Test
@@ -144,9 +155,9 @@ class CategoryControllerTest {
             throws Exception {
         Long categoryId = 1L;
         
-        CategoryRequestDto requestDto = new CategoryRequestDto();
-        requestDto.setName("Epic Fantasy");
-        requestDto.setDescription("Updated description");
+        CategoryRequestDto requestDto = TestUtil.getUpdatedFantasyCategoryRequestDto();
+        CategoryResponseDto expectedCategory = TestUtil.convertToCategoryResponseDto(requestDto);
+        expectedCategory.setId(categoryId);
         
         String jsonRequest = objectMapper.writeValueAsString(requestDto);
         
@@ -157,12 +168,12 @@ class CategoryControllerTest {
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andReturn();
         
-        String jsonResponse = result.getResponse().getContentAsString();
-        JsonNode category = objectMapper.readTree(jsonResponse);
+        CategoryResponseDto actualCategory = objectMapper.readValue(
+                result.getResponse().getContentAsString(),
+                CategoryResponseDto.class
+        );
         
-        assertEquals(1L, category.get("id").asLong());
-        assertEquals("Epic Fantasy", category.get("name").asText());
-        assertEquals("Updated description", category.get("description").asText());
+        assertEquals(expectedCategory, actualCategory);
     }
     
     @Test
@@ -173,9 +184,7 @@ class CategoryControllerTest {
     void updateCategory_ValidRequest_NonExistingCategory_AsAdmin_Returns404() throws Exception {
         Long nonExistingId = 999L;
         
-        CategoryRequestDto requestDto = new CategoryRequestDto();
-        requestDto.setName("Epic Fantasy");
-        requestDto.setDescription("Updated description");
+        CategoryRequestDto requestDto = TestUtil.getUpdatedFantasyCategoryRequestDto();
         
         String jsonRequest = objectMapper.writeValueAsString(requestDto);
         
@@ -205,6 +214,8 @@ class CategoryControllerTest {
     void getBooksByCategoryId_ExistingCategory_ReturnsPagedBooks_200() throws Exception {
         Long categoryId = 1L;
         
+        BookDtoWithoutCategoriesIds expectedBook = TestUtil.getTheHobbitDtoWithoutCategories();
+        
         MvcResult result = mockMvc.perform(get("/categories/{id}/books", categoryId)
                         .param("page", "0")
                         .param("size", "10")
@@ -214,20 +225,20 @@ class CategoryControllerTest {
                 .andReturn();
         
         String json = result.getResponse().getContentAsString();
-        
         JsonNode root = objectMapper.readTree(json);
-        JsonNode books = root.get("content");
+        JsonNode booksJson = root.get("content");
         
-        assertNotNull(books);
-        assertTrue(books.isArray());
-        assertTrue(books.size() > 0);
+        List<BookDtoWithoutCategoriesIds> actualBooks = objectMapper.convertValue(
+                booksJson,
+                new TypeReference<List<BookDtoWithoutCategoriesIds>>() {}
+        );
         
-        JsonNode bookHobbit = books.get(0);
+        assertNotNull(actualBooks);
+        assertTrue(actualBooks.size() > 0);
         
-        assertNotNull(bookHobbit.get("id"));
-        assertEquals("The Hobbit", bookHobbit.get("title").asText());
-        assertEquals("J.R.R. Tolkien", bookHobbit.get("author").asText());
-        assertEquals("9780547928227", bookHobbit.get("isbn").asText());
+        assertThat(actualBooks.get(0))
+                .usingRecursiveComparison()
+                .isEqualTo(expectedBook);
     }
     
 }

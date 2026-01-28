@@ -1,8 +1,8 @@
 package com.bookstore.controller;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -11,11 +11,13 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.bookstore.dto.book.BookDto;
 import com.bookstore.dto.book.CreateBookRequestDto;
+import com.bookstore.util.TestUtil;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.math.BigDecimal;
-import java.util.Set;
+import java.util.List;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -62,6 +64,8 @@ class BookControllerTest {
             """)
     @WithMockUser(username = "user")
     void findAll_ExistingBooks_ReturnsPagedBooks_200() throws Exception {
+        List<BookDto> expectedBooks = TestUtil.getAllBooksDto();
+        
         MvcResult result = mockMvc.perform(get("/books")
                         .param("page", "0")
                         .param("size", "10")
@@ -71,20 +75,20 @@ class BookControllerTest {
                 .andReturn();
         
         String json = result.getResponse().getContentAsString();
-        
         JsonNode root = objectMapper.readTree(json);
-        JsonNode books = root.get("content");
+        JsonNode booksJson = root.get("content");
         
-        assertNotNull(books);
-        assertTrue(books.isArray());
-        assertEquals(3, books.size());
+        List<BookDto> actualBooks = objectMapper.convertValue(
+                booksJson,
+                new TypeReference<>() {
+                }
+        );
         
-        JsonNode bookHobbit = books.get(0);
+        assertEquals(3, actualBooks.size());
         
-        assertEquals(1L, bookHobbit.get("id").asLong());
-        assertEquals("The Hobbit", bookHobbit.get("title").asText());
-        assertEquals("J.R.R. Tolkien", bookHobbit.get("author").asText());
-        
+        assertThat(actualBooks)
+                .usingRecursiveComparison()
+                .isEqualTo(expectedBooks);
     }
     
     @Test
@@ -93,20 +97,20 @@ class BookControllerTest {
             """)
     @WithMockUser(username = "user")
     void getById_ExistingBook_ReturnsBook_200() throws Exception {
+        BookDto expectedBookDto = TestUtil.getTheHobbitBookDto();
+        
         MvcResult result = mockMvc.perform(get("/books/{id}", 1L)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andReturn();
         
-        String json = result.getResponse().getContentAsString();
+        BookDto actualBookDto = objectMapper.readValue(
+                result.getResponse().getContentAsString(),
+                BookDto.class
+        );
         
-        JsonNode book = objectMapper.readTree(json);
-        
-        assertNotNull(book);
-        assertEquals(1L, book.get("id").asLong());
-        assertEquals("The Hobbit", book.get("title").asText());
-        assertEquals("J.R.R. Tolkien", book.get("author").asText());
+        assertEquals(expectedBookDto, actualBookDto);
     }
     
     @Test
@@ -128,14 +132,8 @@ class BookControllerTest {
             save() with valid request as ADMIN returns created BookDto
             """)
     void save_ValidRequestDto_AsAdmin_ReturnsSavedBook_200() throws Exception {
-        CreateBookRequestDto requestDto = new CreateBookRequestDto();
-        requestDto.setTitle("The Lord of the Rings");
-        requestDto.setAuthor("J.R.R. Tolkien");
-        requestDto.setIsbn("9780618640157");
-        requestDto.setPrice(BigDecimal.valueOf(35.00));
-        requestDto.setDescription("Epic high-fantasy novel.");
-        requestDto.setCoverImage(null);
-        requestDto.setCategoriesIds(Set.of(1L));
+        CreateBookRequestDto requestDto = TestUtil.getCreateLordOfTheRingsRequestDto();
+        BookDto expectedBookDto = TestUtil.convertToBookDto(requestDto);
         
         String jsonRequest = objectMapper.writeValueAsString(requestDto);
         
@@ -146,14 +144,16 @@ class BookControllerTest {
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andReturn();
         
-        String json = result.getResponse().getContentAsString();
-        JsonNode book = objectMapper.readTree(json);
+        BookDto actualBookDto = objectMapper.readValue(
+                result.getResponse().getContentAsString(),
+                BookDto.class
+        );
         
-        assertNotNull(book.get("id"));
-        assertEquals("The Lord of the Rings", book.get("title").asText());
-        assertEquals("J.R.R. Tolkien", book.get("author").asText());
-        assertEquals("9780618640157", book.get("isbn").asText());
-        assertEquals(35.00, book.get("price").asDouble(), 0.001);
+        assertNotNull(actualBookDto.getId());
+        assertThat(actualBookDto)
+                .usingRecursiveComparison()
+                .ignoringFields("id")
+                .isEqualTo(expectedBookDto);
     }
     
     @Test
@@ -181,14 +181,9 @@ class BookControllerTest {
     void updateBook_ValidRequestDto_AsAdmin_ReturnsUpdatedBookDto_200() throws Exception {
         Long bookId = 1L;
         
-        CreateBookRequestDto requestDto = new CreateBookRequestDto();
-        requestDto.setTitle("The Hobbit (Updated)");
-        requestDto.setAuthor("J.R.R. Tolkien");
-        requestDto.setIsbn("9780547928227"); // залишаємо той самий, щоб не впасти на unique
-        requestDto.setPrice(BigDecimal.valueOf(19.99));
-        requestDto.setDescription("Updated description");
-        requestDto.setCoverImage(null);
-        requestDto.setCategoriesIds(Set.of(1L));
+        CreateBookRequestDto requestDto = TestUtil.getUpdateCreateBookRequestDto();
+        BookDto expectedBookDto = TestUtil.convertToBookDto(requestDto);
+        expectedBookDto.setId(bookId);
         
         String jsonRequest = objectMapper.writeValueAsString(requestDto);
         
@@ -199,14 +194,13 @@ class BookControllerTest {
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andReturn();
         
-        String json = result.getResponse().getContentAsString();
-        JsonNode book = objectMapper.readTree(json);
+        BookDto actualBookDto = objectMapper.readValue(
+                result.getResponse().getContentAsString(),
+                BookDto.class
+        );
         
-        assertEquals(bookId.longValue(), book.get("id").asLong());
-        assertEquals("The Hobbit (Updated)", book.get("title").asText());
-        assertEquals("J.R.R. Tolkien", book.get("author").asText());
-        assertEquals("9780547928227", book.get("isbn").asText());
-        assertEquals(19.99, book.get("price").asDouble(), 0.001);
+        assertEquals(expectedBookDto, actualBookDto);
+        
     }
     
     @Test
@@ -216,16 +210,10 @@ class BookControllerTest {
     @WithMockUser(username = "admin", roles = "ADMIN")
     void updateBook_NonExistingId_Returns404() throws Exception {
         
-        CreateBookRequestDto requestDto = new CreateBookRequestDto();
-        requestDto.setTitle("Some Title");
-        requestDto.setAuthor("Some Author");
-        requestDto.setIsbn("9999999999999");
-        requestDto.setPrice(BigDecimal.valueOf(10.00));
-        requestDto.setCategoriesIds(Set.of(1L));
+        CreateBookRequestDto requestDto = TestUtil.getNonExistingBookRequestDto();
+        Long nonExistingId = 999L;
         
         String jsonRequest = objectMapper.writeValueAsString(requestDto);
-        
-        Long nonExistingId = 999L;
         
         mockMvc.perform(put("/books/{id}", nonExistingId)
                         .contentType(MediaType.APPLICATION_JSON)
