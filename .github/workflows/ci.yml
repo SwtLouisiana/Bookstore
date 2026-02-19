@@ -1,10 +1,16 @@
 name: Java CI
 
-on: [push, pull_request]
+on: [ push, pull_request ]
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    services:
+      docker:
+        image: docker:20.10.24-dind
+        options: >-
+          --privileged
+          -e DOCKER_TLS_CERTDIR=""
 
     steps:
       - uses: actions/checkout@v2
