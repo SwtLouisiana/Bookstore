@@ -14,6 +14,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -22,6 +23,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 @Tag(name = "Shopping cart management", description = "Endpoint for managing shopping carts")
@@ -87,9 +89,10 @@ public class ShoppingCartController {
                             ShoppingCartResponseDto.class))),
             @ApiResponse(responseCode = "404", description = "Cart or item not found")
     })
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     @DeleteMapping("/items/{cartItemId}")
-    public ShoppingCartResponseDto deleteCartItem(@PathVariable Long cartItemId,
-                                                  @AuthenticationPrincipal User user) {
-        return shoppingCartService.removeCartItem(user.getId(), cartItemId);
+    public void deleteCartItem(@PathVariable Long cartItemId,
+                               @AuthenticationPrincipal User user) {
+        shoppingCartService.removeCartItem(user.getId(), cartItemId);
     }
 }

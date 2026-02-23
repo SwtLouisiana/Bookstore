@@ -88,23 +88,16 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
     }
     
     @Override
-    public ShoppingCartResponseDto removeCartItem(Long userId, Long cartItemId) {
-        ShoppingCart cart = shoppingCartRepository
-                .findByUserId(userId).orElseThrow(() ->
-                        new EntityNotFoundException("ShoppingCart not found for user " + userId));
+    public void removeCartItem(Long userId, Long cartItemId) {
+        ShoppingCart cart = shoppingCartRepository.findByUserId(userId)
+                .orElseThrow(() -> new EntityNotFoundException(
+                        "ShoppingCart not found for user " + userId));
         
-        cartItemRepository.findByIdAndShoppingCartId(cartItemId, cart.getId())
-                .ifPresentOrElse(
-                        cartItem -> {
-                            cartItemRepository.delete(cartItem);
-                            cartItemRepository.flush();
-                            entityManager.refresh(cart);
-                        },
-                        () -> {
-                            throw new EntityNotFoundException(
-                                    "CartItem not found for id " + cartItemId);
-                        });
+        CartItem cartItem = cartItemRepository
+                .findByIdAndShoppingCartId(cartItemId, cart.getId())
+                .orElseThrow(() -> new EntityNotFoundException(
+                        "CartItem not found for id " + cartItemId));
         
-        return shoppingCartMapper.toResponseDto(cart);
+        cartItemRepository.delete(cartItem);
     }
 }

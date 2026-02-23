@@ -216,20 +216,23 @@ class ShoppingCartControllerTest {
     }
     
     @Test
-    @DisplayName("deleteCartItem() removes item from cart and returns updated cart")
+    @DisplayName("deleteCartItem() removes item from cart")
     @WithUserDetails(value = "testuser@example.com",
             userDetailsServiceBeanName = "customUserDetailsService")
     @SqlMergeMode(SqlMergeMode.MergeMode.MERGE)
     @Sql(scripts = "classpath:database/cart-items/add-cart-items-to-cart_items-table.sql")
     @Sql(scripts = "classpath:database/cart-items/delete-cart-items.sql",
             executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
-    void deleteCartItem_ExistingCartItem_RemovesItem_200() throws Exception {
+    void deleteCartItem_ExistingCartItem_RemovesItem_204() throws Exception {
         Long cartItemId = 1L;
         
-        MvcResult result = mockMvc.perform(delete("/cart/items/{cartItemId}", cartItemId)
+        mockMvc.perform(delete("/cart/items/{cartItemId}", cartItemId)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNoContent());
+        
+        MvcResult result = mockMvc.perform(get("/cart")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andReturn();
         
         ShoppingCartResponseDto actualCart = objectMapper.readValue(
@@ -237,7 +240,6 @@ class ShoppingCartControllerTest {
                 ShoppingCartResponseDto.class
         );
         
-        assertNotNull(actualCart);
         boolean itemExists = actualCart.getCartItems().stream()
                 .anyMatch(item -> item.getId().equals(cartItemId));
         

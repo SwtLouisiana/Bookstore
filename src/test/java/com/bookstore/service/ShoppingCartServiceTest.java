@@ -286,21 +286,15 @@ class ShoppingCartServiceTest {
         cartItem.setId(cartItemId);
         cartItem.setShoppingCart(cart);
         
-        ShoppingCartResponseDto expectedDto = TestUtil.getShoppingCartResponseDto();
-        
         when(shoppingCartRepository.findByUserId(userId)).thenReturn(Optional.of(cart));
         when(cartItemRepository.findByIdAndShoppingCartId(cartItemId, cart.getId()))
                 .thenReturn(Optional.of(cartItem));
-        when(shoppingCartMapper.toResponseDto(cart)).thenReturn(expectedDto);
         
-        ShoppingCartResponseDto result = shoppingCartService.removeCartItem(userId, cartItemId);
-        
-        assertEquals(expectedDto, result);
+        shoppingCartService.removeCartItem(userId, cartItemId);
         
         verify(shoppingCartRepository).findByUserId(userId);
         verify(cartItemRepository).findByIdAndShoppingCartId(cartItemId, cart.getId());
         verify(cartItemRepository).delete(cartItem);
-        verify(shoppingCartMapper).toResponseDto(cart);
     }
     
     @Test
@@ -315,7 +309,7 @@ class ShoppingCartServiceTest {
                 () -> shoppingCartService.removeCartItem(userId, cartItemId));
         
         verify(shoppingCartRepository).findByUserId(userId);
-        verifyNoInteractions(cartItemRepository, shoppingCartMapper);
+        verifyNoInteractions(cartItemRepository);
     }
     
     @Test
@@ -336,6 +330,5 @@ class ShoppingCartServiceTest {
         verify(shoppingCartRepository).findByUserId(userId);
         verify(cartItemRepository).findByIdAndShoppingCartId(cartItemId, cart.getId());
         verify(cartItemRepository, never()).delete(any());
-        verifyNoInteractions(shoppingCartMapper);
     }
 }
