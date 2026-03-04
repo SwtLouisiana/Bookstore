@@ -3,11 +3,19 @@ package com.bookstore.util;
 import com.bookstore.dto.book.BookDto;
 import com.bookstore.dto.book.BookDtoWithoutCategoriesIds;
 import com.bookstore.dto.book.CreateBookRequestDto;
+import com.bookstore.dto.cartitem.CartItemRequestDto;
+import com.bookstore.dto.cartitem.CartItemResponseDto;
+import com.bookstore.dto.cartitem.CartItemUpdateRequest;
 import com.bookstore.dto.category.CategoryRequestDto;
 import com.bookstore.dto.category.CategoryResponseDto;
+import com.bookstore.dto.shoppingcart.ShoppingCartResponseDto;
 import com.bookstore.model.Book;
+import com.bookstore.model.CartItem;
 import com.bookstore.model.Category;
+import com.bookstore.model.ShoppingCart;
+import com.bookstore.model.User;
 import java.math.BigDecimal;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -274,5 +282,124 @@ public class TestUtil {
         category.setDescription("Books about historical events");
         
         return category;
+    }
+    
+    public static User getTestUser() {
+        User user = new User();
+        user.setId(1L);
+        user.setEmail("testuser@example.com");
+        user.setPassword("$2a$10$encodedPassword");
+        user.setFirstName("John");
+        user.setLastName("Doe");
+        user.setShippingAddress("123 Main St");
+        user.setDeleted(false);
+        
+        return user;
+    }
+    
+    public static ShoppingCart getTestShoppingCart() {
+        ShoppingCart cart = new ShoppingCart();
+        cart.setId(1L);
+        cart.setUser(getTestUser());
+        cart.setCartItems(new HashSet<>());
+        cart.setDeleted(false);
+        
+        return cart;
+    }
+    
+    public static ShoppingCart getShoppingCartWithItems() {
+        ShoppingCart cart = getTestShoppingCart();
+        CartItem item1 = getCartItemForHobbit();
+        CartItem item2 = getCartItemForDune();
+        
+        item1.setShoppingCart(cart);
+        item2.setShoppingCart(cart);
+        
+        cart.getCartItems().add(item1);
+        cart.getCartItems().add(item2);
+        
+        return cart;
+    }
+    
+    public static CartItem getCartItemForHobbit() {
+        CartItem item = new CartItem();
+        item.setId(1L);
+        item.setBook(getTheHobbitBook());
+        item.setQuantity(2);
+        
+        return item;
+    }
+    
+    public static CartItem getCartItemForDune() {
+        CartItem item = new CartItem();
+        item.setId(2L);
+        item.setBook(getDuneBook());
+        item.setQuantity(1);
+        
+        return item;
+    }
+    
+    public static CartItemRequestDto getCartItemRequestDtoForHobbit() {
+        CartItemRequestDto dto = new CartItemRequestDto();
+        dto.setBookId(1L);
+        dto.setQuantity(2);
+        
+        return dto;
+    }
+    
+    public static CartItemRequestDto getCartItemRequestDtoForDune() {
+        CartItemRequestDto dto = new CartItemRequestDto();
+        dto.setBookId(2L);
+        dto.setQuantity(1);
+        
+        return dto;
+    }
+    
+    public static CartItemUpdateRequest getCartItemUpdateRequest(int quantity) {
+        CartItemUpdateRequest request = new CartItemUpdateRequest();
+        request.setQuantity(quantity);
+        
+        return request;
+    }
+    
+    public static CartItemResponseDto getCartItemResponseDtoForHobbit() {
+        CartItemResponseDto dto = new CartItemResponseDto();
+        dto.setId(1L);
+        dto.setBookId(1L);
+        dto.setBookTitle("The Hobbit");
+        dto.setQuantity(2);
+        
+        return dto;
+    }
+    
+    public static CartItemResponseDto getCartItemResponseDtoForDune() {
+        CartItemResponseDto dto = new CartItemResponseDto();
+        dto.setId(2L);
+        dto.setBookId(2L);
+        dto.setBookTitle("Dune");
+        dto.setQuantity(1);
+        
+        return dto;
+    }
+    
+    public static ShoppingCartResponseDto getShoppingCartResponseDto() {
+        ShoppingCartResponseDto dto = new ShoppingCartResponseDto();
+        dto.setId(1L);
+        dto.setUserId(1L);
+        dto.setCartItems(List.of(
+                getCartItemResponseDtoForHobbit(),
+                getCartItemResponseDtoForDune()
+        ));
+        
+        return dto;
+    }
+    
+    public static ShoppingCartResponseDto getEmptyShoppingCartResponseDto() {
+        ShoppingCartResponseDto dto = new ShoppingCartResponseDto();
+        dto.setId(1L);
+        dto.setUserId(1L);
+        dto.setCartItems(List.of());
+        
+        return dto;
     }
 }

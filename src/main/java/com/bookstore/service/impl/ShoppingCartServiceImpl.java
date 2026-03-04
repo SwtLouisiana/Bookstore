@@ -3,6 +3,7 @@ package com.bookstore.service.impl;
 import com.bookstore.dto.cartitem.CartItemRequestDto;
 import com.bookstore.dto.cartitem.CartItemUpdateRequest;
 import com.bookstore.dto.shoppingcart.ShoppingCartResponseDto;
+import com.bookstore.exception.EntityNotFoundException;
 import com.bookstore.mapper.CartItemMapper;
 import com.bookstore.mapper.ShoppingCartMapper;
 import com.bookstore.model.Book;
@@ -13,7 +14,7 @@ import com.bookstore.repository.BookRepository;
 import com.bookstore.repository.CartItemRepository;
 import com.bookstore.repository.ShoppingCartRepository;
 import com.bookstore.service.ShoppingCartService;
-import jakarta.persistence.EntityNotFoundException;
+import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -27,6 +28,7 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
     private final BookRepository bookRepository;
     private final CartItemRepository cartItemRepository;
     private final CartItemMapper cartItemMapper;
+    private final EntityManager entityManager;
     
     @Override
     public ShoppingCartResponseDto getShoppingCart(Long userId) {
@@ -86,16 +88,16 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
     }
     
     @Override
-    public ShoppingCartResponseDto removeCartItem(Long userId, Long cartItemId) {
-        ShoppingCart cart = shoppingCartRepository
-                .findByUserId(userId).orElseThrow(() ->
-                        new EntityNotFoundException("ShoppingCart not found for user " + userId));
-        cartItemRepository.findByIdAndShoppingCartId(cartItemId, cart.getId())
-                .ifPresentOrElse(cartItemRepository::delete,
-                        () -> {
-                            throw new EntityNotFoundException(
-                                    "CartItem not found for id " + cartItemId);
-                        });
-        return shoppingCartMapper.toResponseDto(cart);
+    public void removeCartItem(Long userId, Long cartItemId) {
+        ShoppingCart cart = shoppingCartRepository.findByUserId(userId)
+                .orElseThrow(() -> new EntityNotFoundException(
+                        "ShoppingCart not found for user " + userId));
+        
+        CartItem cartItem = cartItemRepository
+                .findByIdAndShoppingCartId(cartItemId, cart.getId())
+                .orElseThrow(() -> new EntityNotFoundException(
+                        "CartItem not found for id " + cartItemId));
+        
+        cartItemRepository.delete(cartItem);
     }
 }
