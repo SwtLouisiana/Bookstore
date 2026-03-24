@@ -6,6 +6,7 @@ Backend application for an online bookstore built with Java and Spring Boot.
 - [Project overview](#project-overview)
 - [Technologies used](#technologies-used)
 - [Features](#features)
+- [Models and relations](#Models-and-relations)
 - [Live demo](#live-demo)
 - [Getting started](#getting-started)
 - [Swagger](#swagger)
