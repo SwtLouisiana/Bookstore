@@ -20,10 +20,10 @@ It includes authentication and authorization, database migrations, API documenta
 
 ## Technologies used
 - Java 17
-- Spring Boot
+- Spring Boot 3.4.1
+- MySQL 8.0.33
 - Spring Security
 - Spring Data JPA
-- MySQL
 - Liquibase
 - Swagger / OpenAPI
 - Docker
@@ -139,22 +139,29 @@ erDiagram
 The application is deployed on AWS EC2.
 
 Swagger UI:  
-`http://ec2-54-175-210-234.compute-1.amazonaws.com/swagger-ui/index.html`
+http://ec2-54-175-210-234.compute-1.amazonaws.com/swagger-ui/index.html
 
 ## Getting started
 
 ### 1. Clone the repository
+
+[GitHub repository](https://github.com/SwtLouisiana/Bookstore)
+
 ```bash
 git clone https://github.com/SwtLouisiana/Bookstore.git
 cd Bookstore
 ```
 
-### 2. Create environment file
+
+### 2. Create an `.env` file
+Create an `.env` file with the required environment variables. Use `.env.sample` as an example.
+
+### 3. Repackage the project
 ```bash
-cp .env.sample .env
+mvn clean package
 ```
 
-### 3. Run with Docker
+### 4. Run with Docker
 ```bash
 docker-compose up --build
 ```
@@ -162,7 +169,7 @@ docker-compose up --build
 ## Swagger
 After starting the application locally, Swagger UI is available at:
 
-`http://localhost:8080/swagger-ui/index.html`
+http://localhost:8080/swagger-ui/index.html
 
 ## Project structure
 - **config**
